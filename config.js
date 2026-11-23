@@ -13,14 +13,14 @@ window.SITE = {
   verified: true,                    // галочка у имени (true / false)
   marquee: "TONER",                  // большая бегущая надпись на фоне ("" — убрать)
 
-  // --- Музыка на сайте: внизу кнопка «включить / выключить». ---
-  // url — ссылка на трек в SoundCloud ИЛИ свой mp3 из папки music, например "music/track.mp3".
-  // title и artist — что написать рядом с кнопкой (если пусто, для SoundCloud возьмётся само).
+  // --- Музыка на сайте: внизу кнопка «включить / выключить» и «следующий трек». ---
+  // Каждый трек: ссылка на SoundCloud ИЛИ свой mp3 из папки music, например "music/track.mp3".
   bgMusic: {
-    url: "https://soundcloud.com/foidslayer333larp/just-staring-sophie-vyzee",
-    title: "Just Staring / VYZEE",
-    artist: "SOPHIE · melodic edit",
-    loop: true,                                     // играть по кругу
+    tracks: [
+      { url: "https://soundcloud.com/foidslayer333larp/just-staring-sophie-vyzee", title: "Just Staring / VYZEE", artist: "SOPHIE · melodic edit" },
+      { url: "https://soundcloud.com/snowzyzz/all-i-need-clams-casino-bass", title: "All I Need", artist: "Clams Casino · bass boosted" },
+    ],
+    loop: true,
   },
 
   // --- Цвета. Сейчас чёрно-белые. Можно вписать любые, например "#ff3d81" ---
@@ -40,7 +40,7 @@ window.SITE = {
 
   // --- Блоки на странице (идут сверху вниз) ---
   // icon — эмодзи или название иконки: ai, telegram, youtube, tiktok, instagram, vk, discord, twitch, github, spotify, email
-  // Типы: embed (плеер SoundCloud/Spotify/YouTube/Яндекс по ссылке), music (свои mp3), link (кнопка), header (заголовок), text (текст), grid (плитки по 2)
+  // Типы: 3d (3D-анимация), embed (плеер SoundCloud/Spotify/YouTube/Яндекс по ссылке), music (свои mp3), link (кнопка), header (заголовок), text (текст), grid (плитки по 2)
   blocks: [
     {
       type: "link",
@@ -72,6 +72,9 @@ window.SITE = {
       ],
     },
 
+    // 3D-анимация (можно крутить мышкой или пальцем). text — подпись снизу, можно "".
+    { type: "3d", text: "toner" },
+
     // Свои mp3 (если появятся). Убери // в начале строк, положи файлы в папку music.
     // {
     //   type: "music",
@@ -86,6 +89,7 @@ window.SITE = {
   // --- Комментарии внизу сайта (ссылки и @ники запрещены) ---
   comments: {
     title: "Напиши мне",
+    reserved: ["toner"],  // имена с этим словом (toner, tonerov, tonerovv, т0нер...) может писать только владелец
     placeholder: "Оставь комментарий…",
     supabaseUrl: "https://knzhaqttibsiyczpfveb.supabase.co",
     supabaseKey: "sb_publishable_N59Y2_KXDcB9xbmVXrjHMA_Yn3yG_qZ",   // публичный ключ, его можно показывать
