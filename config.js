@@ -83,5 +83,13 @@ window.SITE = {
 
   ],
 
+  // --- Комментарии внизу сайта (ссылки и @ники запрещены) ---
+  comments: {
+    title: "Напиши мне",
+    placeholder: "Оставь комментарий…",
+    supabaseUrl: "https://knzhaqttibsiyczpfveb.supabase.co",
+    supabaseKey: "sb_publishable_N59Y2_KXDcB9xbmVXrjHMA_Yn3yG_qZ",   // публичный ключ, его можно показывать
+  },
+
   footer: "© 2026 toner",
 };
