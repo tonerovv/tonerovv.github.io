@@ -12,6 +12,8 @@ window.SITE = {
   avatar: "img/avatar.jpg",          // ← положи фото в папку img под именем avatar.jpg. Нет фото — будет буква
   verified: true,                    // галочка у имени (true / false)
   marquee: "TONER",                  // большая бегущая надпись на фоне ("" — убрать)
+  views: true,                       // счётчик просмотров под соцсетями (false — убрать)
+  secret: "ты нашёл пасхалку 👀 привет от toner",  // текст пасхалки (5 быстрых нажатий на аватарку)
 
   // --- Музыка на сайте: внизу кнопка «включить / выключить» и «следующий трек». ---
   // Каждый трек: ссылка на SoundCloud ИЛИ свой mp3 из папки music, например "music/track.mp3".
@@ -40,7 +42,7 @@ window.SITE = {
 
   // --- Блоки на странице (идут сверху вниз) ---
   // icon — эмодзи или название иконки: ai, telegram, youtube, tiktok, instagram, vk, discord, twitch, github, spotify, email
-  // Типы: 3d (3D-анимация), embed (плеер SoundCloud/Spotify/YouTube/Яндекс по ссылке), music (свои mp3), link (кнопка), header (заголовок), text (текст), grid (плитки по 2)
+  // Типы: 3d (3D-анимация), youtube (последнее видео канала), embed (плеер SoundCloud/Spotify/YouTube/Яндекс по ссылке), music (свои mp3), link (кнопка), header (заголовок), text (текст), grid (плитки по 2)
   blocks: [
     {
       type: "link",
@@ -71,6 +73,9 @@ window.SITE = {
         { icon: "tiktok", title: "TikTok",  url: "https://tiktok.com/@tonerovv" },
       ],
     },
+
+    // Последнее видео с YouTube-канала (обновляется само). shorts: true — показывать и Shorts.
+    { type: "youtube", title: "Последнее видео", channel: "UC9ZWrrcMfFI0idykAh-MuBg" },
 
     // 3D-анимация. background: true — большая фигура на заднем плане всего сайта.
     // background: false — маленькая карточка между блоками (её можно крутить пальцем), text — подпись.
