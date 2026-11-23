@@ -224,6 +224,8 @@
   .cmt .admbar{font-size:12.5px;color:var(--muted);margin-bottom:10px}
   .cmt .admbar a{text-decoration:underline;cursor:pointer;margin-left:6px}
   .d3{height:300px;padding:0}
+  .bg3d{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:0;transition:opacity 2.5s ease}
+  .bg3d.on{opacity:1}
   .d3 canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:pan-y}
   .d3 canvas:active{cursor:grabbing}
   .d3t{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-family:Unbounded;font-size:11px;letter-spacing:.3em;
@@ -322,7 +324,7 @@
       html += `<div class="grid reveal" ${d()}>${(b.items || []).map(t =>
         `<a class="card tile" href="${esc(t.url)}"${ext(t.url)}><div class="ti">${icon(t.icon || "✨")}</div><div class="tt">${esc(t.title)}</div></a>`).join("")}</div>`;
     } else if (b.type === "3d") {
-      html += `<div class="card d3 reveal" ${d()}><canvas aria-hidden="true"></canvas>${b.text ? `<div class="d3t">${esc(b.text)}</div>` : ""}</div>`;
+      if (!b.background) html += `<div class="card d3 reveal" ${d()}><canvas aria-hidden="true"></canvas>${b.text ? `<div class="d3t">${esc(b.text)}</div>` : ""}</div>`;
     } else if (b.type === "embed") {
       const e = toEmbed(b.url || "");
       if (e) html += `<div class="card embed reveal" ${d()}>${b.title ? `<div class="embed-h"><span class="eq"><i></i><i></i><i></i><i></i></span>${esc(b.title)}</div>` : ""}<iframe src="${esc(e.src)}" height="${b.height || e.h}" loading="lazy" allow="autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
@@ -470,16 +472,25 @@
   }
 
   // ---- 3D-анимация (облако точек, которое меняет форму; можно крутить мышкой/пальцем) ----
-  document.querySelectorAll(".d3 canvas").forEach(cv => {
-    const ctx = cv.getContext("2d"), N = 1100, P = Math.PI * 2;
+  // background: true — большая фигура на заднем плане, крутится от скролла и движения мыши
+  if ((S.blocks || []).some(b => b.type === "3d" && b.background))
+    document.querySelector(".bg").insertAdjacentHTML("afterend", '<canvas class="bg3d" aria-hidden="true"></canvas>');
+  document.querySelectorAll(".d3 canvas, canvas.bg3d").forEach(cv => {
+    const BG = cv.classList.contains("bg3d"), ctx = cv.getContext("2d"), N = BG ? 1600 : 1100, P = Math.PI * 2;
     const knot = i => { const t = i / N * P * 2, r = 2 + Math.cos(3 * t / 2); return [r * Math.cos(t) * .42, r * Math.sin(t) * .42, Math.sin(3 * t / 2) * .55]; };
     const sphere = i => { const y = 1 - 2 * (i + .5) / N, r = Math.sqrt(1 - y * y), a = i * 2.39996; return [Math.cos(a) * r * 1.15, y * 1.15, Math.sin(a) * r * 1.15]; };
     const torus = i => { const u = i / N * P * 23, v = i / N * P; return [(1 + .38 * Math.cos(u)) * Math.cos(v), .38 * Math.sin(u), (1 + .38 * Math.cos(u)) * Math.sin(v)]; };
     const wave = i => { const g = 34, x = (i % g) / (g - 1) * 2.4 - 1.2, z = Math.floor(i / g) / (N / g) * 2.4 - 1.2; return [x, Math.sin(x * 3) * Math.cos(z * 3) * .25, z]; };
     const shapes = [knot, sphere, torus, wave].map(f => Array.from({ length: N }, (_, i) => f(i)));
-    let W = 0, Hh = 0, rx = -.35, ry = 0, vx = 0, vy = .0045, drag = null, si = 0, t0 = performance.now(), vis = true;
+    let W = 0, Hh = 0, rx = -.35, ry = 0, vx = 0, vy = .0045, drag = null, si = BG ? 1 : 0, t0 = performance.now(), vis = true;
     const fit = () => { const d = Math.min(devicePixelRatio || 1, 2); W = cv.clientWidth; Hh = cv.clientHeight; cv.width = W * d; cv.height = Hh * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
     fit(); addEventListener("resize", fit);
+    let mx = 0, my = 0, tmx = 0, tmy = 0, lastY = scrollY;
+    if (BG) {
+      setTimeout(() => cv.classList.add("on"), 300);
+      addEventListener("pointermove", e => { tmx = e.clientX / innerWidth - .5; tmy = e.clientY / innerHeight - .5; });
+      addEventListener("scroll", () => { vy += (scrollY - lastY) * .00012; lastY = scrollY; }, { passive: true });
+    }
     cv.addEventListener("pointerdown", e => { drag = [e.clientX, e.clientY]; cv.setPointerCapture(e.pointerId); });
     cv.addEventListener("pointermove", e => { if (!drag) return; vy = (e.clientX - drag[0]) * .0009; vx = (e.clientY - drag[1]) * .0009; ry += vy; rx += vx; drag = [e.clientX, e.clientY]; });
     cv.addEventListener("pointerup", () => drag = null); cv.addEventListener("pointercancel", () => drag = null);
@@ -487,18 +498,22 @@
     const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
     (function frame(now) {
       requestAnimationFrame(frame); if (!vis) return;
-      if (!drag) { vy += (.0045 - vy) * .02; vx *= .95; ry += vy; rx += vx; }
+      if (!drag) { vy += ((BG ? .0022 : .0045) - vy) * .02; vx *= .95; ry += vy; rx += vx; }
+      mx += (tmx - mx) * .04; my += (tmy - my) * .04;
       const el = (now - t0) / 1000; if (el > 6) { si = (si + 1) % shapes.length; t0 = now; }
       const m = ease(Math.min(Math.max((el - 4.6) / 1.4, 0), 1)), A = shapes[si], B = shapes[(si + 1) % shapes.length];
       ctx.clearRect(0, 0, W, Hh);
-      const cy = Math.cos(ry), sy = Math.sin(ry), cx = Math.cos(rx), sx = Math.sin(rx), sc = Math.min(W, Hh) * .36, pts = [];
+      const RX = rx + my * .5, RY = ry + mx * .6;
+      const cy = Math.cos(RY), sy = Math.sin(RY), cx = Math.cos(RX), sx = Math.sin(RX), pts = [];
+      const sc = BG ? (W < 700 ? W * .62 : Math.min(W, Hh) * .4) : Math.min(W, Hh) * .36, ox = W / 2 + mx * 40, oy = Hh / 2 + my * 40;
+      const dot = BG ? Math.max(1.1, sc / 190) : 1.25, fade = BG ? .5 : 1;
       for (let i = 0; i < N; i++) {
         let x = A[i][0] + (B[i][0] - A[i][0]) * m, y = A[i][1] + (B[i][1] - A[i][1]) * m, z = A[i][2] + (B[i][2] - A[i][2]) * m;
         let x2 = x * cy - z * sy, z2 = x * sy + z * cy, y2 = y * cx - z2 * sx, z3 = y * sx + z2 * cx;
-        const p = 3.2 / (3.2 + z3); pts.push([W / 2 + x2 * sc * p, Hh / 2 + y2 * sc * p, z3, p]);
+        const p = 3.2 / (3.2 + z3); pts.push([ox + x2 * sc * p, oy + y2 * sc * p, z3, p]);
       }
       pts.sort((a, b) => b[2] - a[2]);
-      for (const [x, y, z, p] of pts) { const a = Math.max(.08, Math.min(1, .75 - z * .45)); ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(x, y, 1.25 * p * p, 0, P); ctx.fill(); }
+      for (const [x, y, z, p] of pts) { const a = Math.max(.08, Math.min(1, .75 - z * .45)) * fade; ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(x, y, dot * p * p, 0, P); ctx.fill(); }
     })(performance.now());
   });
 
