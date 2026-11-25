@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Мои ссылки</title>
 <meta name="theme-color" content="#050505">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://w.soundcloud.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' https: blob:; connect-src 'self' https://knzhaqttibsiyczpfveb.supabase.co wss://knzhaqttibsiyczpfveb.supabase.co; frame-src https://w.soundcloud.com https://www.youtube-nocookie.com https://www.youtube.com https://open.spotify.com https://music.yandex.ru; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="config.js"></script>
+<link rel="stylesheet" href="social.css">
 <style>
   :root{
     --a1:#ffffff; --a2:#cfcfcf; --a3:#6b6b6b;
@@ -274,6 +277,7 @@
 <div class="lines"></div><div class="marquee" id="mq"></div><div class="grain"></div><div class="vignette"></div>
 
 <main id="app"></main>
+<main id="soc" hidden></main>
 
 <script>
 (() => {
@@ -644,5 +648,7 @@
   });
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" crossorigin="anonymous" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o"></script>
+<script src="social.js"></script>
 </body>
 </html>
