@@ -121,3 +121,76 @@
 .sn-tile.wide>span:last-child{flex:1;text-align:left}
 body.has-mini .sn-chat{height:calc(100dvh - 260px)}
 .sn-m.me .sn-n svg{filter:invert(1)}
+
+/* ===== часть 2: аватарки, лента, люди, профили, переходник ===== */
+a.sn-n{color:var(--text)}a.sn-n:hover{text-decoration:underline;text-underline-offset:3px}
+.sn-badge{width:15px;height:15px;flex:none}
+.sn-hero h1{display:inline-flex;align-items:center;gap:8px;line-height:1}
+.sn-hero h1 svg{width:24px;height:24px;flex:none;display:block;position:relative;top:1px}
+.sn-hero .avatar img{width:100%;height:100%;object-fit:cover}
+.sn-av{overflow:hidden}
+.sn-av img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.sn-av.xs{width:22px;height:22px;font-size:10px}
+.sn-av.tl{width:42px;height:42px;font-size:16px}
+.sn-top .sn-me{padding-left:8px}
+
+.sn-avpick{position:relative;cursor:pointer;flex:none;border-radius:50%}
+.sn-avpick .cam{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:#fff;color:#000;
+  display:grid;place-items:center;border:2px solid var(--bg);transition:transform .2s}
+.sn-avpick .cam svg{width:14px;height:14px}
+.sn-avpick:hover .cam{transform:scale(1.1)}
+.sn-avpick.busy{opacity:.5;pointer-events:none}
+.sn-bio textarea{min-height:0}
+.sn-inline{display:flex;gap:8px;align-items:center}
+.sn-inline input{flex:1;min-width:0}
+.sn-inline .btn{flex:none}
+
+.sn-list{display:flex;flex-direction:column;gap:14px}
+.sn-compose{display:flex;flex-direction:column;gap:10px}
+.sn-cwho{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+
+.sn-follow{flex:none;font:inherit;font-weight:700;font-size:13px;border-radius:99px;padding:7px 14px;cursor:pointer;
+  background:#fff;color:#000;border:1px solid #fff;transition:transform .2s,background .2s,color .2s}
+.sn-follow:hover{transform:translateY(-1px)}
+.sn-follow.on{background:transparent;color:var(--muted);border-color:var(--border)}
+.sn-follow:disabled{opacity:.5}
+
+.sn-pcard{padding:18px}
+.sn-pc-top{display:flex;align-items:center;gap:16px}
+.sn-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);text-align:center}
+.sn-stats b{display:block;font-family:Unbounded;font-size:18px;font-weight:700}
+.sn-stats span{color:var(--muted);font-size:11.5px}
+.sn-pc-name{margin-top:12px}.sn-pc-name .sn-n{font-size:18px}.sn-pc-name .sn-n .sn-badge{width:18px;height:18px}
+.sn-pc-bio{color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:6px;white-space:pre-wrap;word-break:break-word}
+.sn-pc-act{margin-top:14px;display:flex}
+.sn-pc-act>*{flex:1;text-align:center;padding:10px}
+
+.sn-search{display:flex;align-items:center;gap:10px;padding:4px 14px}
+.sn-search svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round}
+.sn-search input{border:none;background:none;padding:12px 0}
+.sn-search input:focus{background:none}
+.sn-urow{display:flex;align-items:center;gap:12px;padding:12px 14px;transition:transform .2s,background .2s}
+.sn-urow:hover{transform:translateY(-2px);background:var(--card-hover)}
+.sn-urow .who{flex:1;min-width:0;display:flex;flex-direction:column}
+.sn-urow .sn-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* переходник: карточка владельца и быстрые разделы */
+.sn-lk{display:flex;flex-direction:column;gap:10px;margin:-2px 0 6px}
+.sn-lk-row{display:flex;align-items:center;justify-content:center;gap:12px}
+.sn-lk-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sn-lk-nav a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:16px;font-size:12px;font-weight:700;
+  background:var(--card);border:1px solid var(--border);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .2s,background .2s}
+.sn-lk-nav a:hover{transform:translateY(-3px);background:var(--card-hover)}
+.sn-lk-nav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#app .link{border-radius:20px;min-height:64px}
+#app .link:not(.hl) .ico{border:1px solid var(--border);background:rgba(255,255,255,.04)}
+#app .link:not(.hl) .arrow{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--border)}
+#app .profile .avatar img{border-radius:50%}
+.sn-tile .ic .sn-av{width:42px;height:42px;min-height:0;padding:0;border-radius:13px;font-size:16px}
+.sn-tile .ic .sn-av img{border-radius:13px}
+.tabs.sn{display:flex;gap:6px;background:rgba(255,255,255,.05);border-radius:14px;padding:4px;margin-bottom:2px}
+.tabs.sn button{flex:1;font:inherit;font-weight:700;font-size:14px;padding:9px;border:none;border-radius:10px;background:none;color:var(--muted);cursor:pointer}
+.tabs.sn button.on{background:#fff;color:#000}
+.sn form.sn-inline{flex-direction:row;flex-wrap:wrap}
+.sn form.sn-inline input{flex:1 1 140px}
+.sn form.sn-inline .msg{flex-basis:100%}

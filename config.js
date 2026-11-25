@@ -54,13 +54,6 @@ window.SITE = {
     },
     {
       type: "link",
-      icon: "ai",
-      title: "Обучение ИИ",
-      subtitle: "В закрепе канала @blazenew",
-      url: "https://t.me/blazenew",   // ← сюда можно вставить ссылку на сам закреп, например https://t.me/blazenew/5
-    },
-    {
-      type: "link",
       icon: "telegram",
       title: "Telegram-канал",
       subtitle: "@blazenew",
