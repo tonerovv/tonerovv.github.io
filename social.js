@@ -239,7 +239,7 @@
   }
   async function loadPosts() {
     const box = soc.querySelector("#pl"); if (!box) return;
-    const { data, error } = await sb.from("posts").select(`id,text,pinned,created_at,a:profiles(${PROF}),post_likes(count),post_comments(count)`)
+    const { data, error } = await sb.from("posts").select(`id,text,pinned,created_at,a:profiles!posts_author_fkey(${PROF}),post_likes(count),post_comments(count)`)
       .order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(30);
     if (error) { box.innerHTML = `<div class="sn-empty">Не удалось загрузить посты</div>`; return; }
     let liked = new Set();
@@ -278,7 +278,7 @@
     const wrap = document.createElement("div"); wrap.className = "sn-cm"; wrap.innerHTML = `<div class="sn-empty">Загрузка…</div>`;
     el.append(wrap);
     const draw = async () => {
-      const { data, error } = await sb.from("post_comments").select(`id,text,created_at,author,a:profiles(${PROF})`).eq("post_id", id).order("created_at").limit(200);
+      const { data, error } = await sb.from("post_comments").select(`id,text,created_at,author,a:profiles!post_comments_author_fkey(${PROF})`).eq("post_id", id).order("created_at").limit(200);
       if (error) { wrap.innerHTML = `<div class="sn-empty">Не удалось загрузить</div>`; return; }
       wrap.innerHTML = (data.length ? data.map(c => `<div class="sn-c" data-id="${c.id}">${av(c.a)}<div class="bd"><div class="hd">${name(c.a)}<span class="sn-t">${ago(c.created_at)}</span>
           ${ME && (ME.is_admin || ME.id === c.author) ? `<button class="mini-b del">удалить</button>` : ""}</div><div class="sn-text">${esc(c.text)}</div></div></div>`).join("") : `<div class="sn-note">Комментариев пока нет.</div>`)
@@ -305,7 +305,7 @@
       <section class="card sn-box sn reveal" id="ravg"><div class="sn-empty">Загрузка…</div></section>
       <section class="card sn-box sn reveal" id="rf"></section>
       <div id="rl" class="sn" style="display:flex;flex-direction:column;gap:12px"></div>`;
-    const { data, error } = await sb.from("reviews").select(`id,rating,text,reply,pinned,created_at,author,a:profiles(${PROF})`)
+    const { data, error } = await sb.from("reviews").select(`id,rating,text,reply,pinned,created_at,author,a:profiles!reviews_author_fkey(${PROF})`)
       .order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(100);
     if (!soc.querySelector("#rl")) return;
     if (error) { soc.querySelector("#ravg").innerHTML = `<div class="sn-empty">Не удалось загрузить отзывы</div>`; return; }
