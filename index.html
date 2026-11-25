@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=2"></script>
-<link rel="stylesheet" href="social.css?v=2">
+<script src="config.js?v=3"></script>
+<link rel="stylesheet" href="social.css?v=3">
 <style>
   :root{
     --a1:#ffffff; --a2:#cfcfcf; --a3:#6b6b6b;
@@ -333,9 +333,9 @@
   // шапка
   const initial = esc((S.name || "?").trim().charAt(0).toUpperCase());
   html += `<section class="profile">
-    <div class="reveal" ${d()}><div class="avatar-wrap"><div class="avatar">
+${S.linksAvatar === false ? "" : `    <div class="reveal" ${d()}><div class="avatar-wrap"><div class="avatar">
       ${S.avatar ? `<img src="${esc(S.avatar)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">` : `<span>${initial}</span>`}
-    </div></div></div>
+    </div></div></div>`}
     <h1 class="reveal" ${d()}>${esc(S.name)}${S.verified ? `<svg class="verified" viewBox="0 0 24 24"><path fill="#fff" d="m12 1 2.6 2 3.2-.3 1 3.1 2.8 1.6-.9 3.1 1.3 3-2.6 1.9-.4 3.2-3.2.5L14 22.6l-2-1.2-2 1.2-1.8-2.7-3.2-.5-.4-3.2L2 14.3l1.3-3-.9-3.1 2.8-1.6 1-3.1 3.2.3z"/><path d="m8 12 2.7 2.7L16.3 9" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ""}</h1>
     ${S.handle ? `<div class="handle reveal" ${d()}>${esc(S.handle)}</div>` : ""}
     ${S.bio ? `<p class="bio reveal" ${d()}>${esc(S.bio)}</p>` : ""}
@@ -389,7 +389,7 @@
     }
   });
   const C = S.comments || {};
-  if (C.supabaseUrl && C.supabaseKey) html += `<section class="card cmt reveal" ${d()} id="cmt">
+  if (C.supabaseUrl && C.supabaseKey && C.show !== false) html += `<section class="card cmt reveal" ${d()} id="cmt">
     <h3>${esc(C.title || "Комментарии")}</h3>
     <form>
       <input name="n" maxlength="30" placeholder="Имя (можно не писать)" autocomplete="off">
@@ -447,7 +447,7 @@
   }
 
   // ---- комментарии ----
-  if (C.supabaseUrl && C.supabaseKey) {
+  if (C.supabaseUrl && C.supabaseKey && C.show !== false) {
     const box = document.getElementById("cmt"), form = box.querySelector("form"), list = box.querySelector(".list"),
       msg = box.querySelector(".msg"), cnt = box.querySelector(".cnt"), btn = form.querySelector("button");
     const BASE = C.supabaseUrl.replace(/\/$/, "") + "/rest/v1", API = BASE + "/comments", H = { apikey: C.supabaseKey };
@@ -649,6 +649,6 @@
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" crossorigin="anonymous" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o"></script>
-<script src="social.js?v=2"></script>
+<script src="social.js?v=3"></script>
 </body>
 </html>

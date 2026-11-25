@@ -11,8 +11,9 @@ window.SITE = {
   bio: "музыка · видео · всякое",    // ← пара слов о себе
   avatar: "img/avatar.jpg",          // ← положи фото в папку img под именем avatar.jpg. Нет фото — будет буква
   verified: true,                    // галочка у имени (true / false)
+  linksAvatar: false,                // аватарка на странице «Переходник» (true — показать)
   marquee: "TONER",                  // большая бегущая надпись на фоне ("" — убрать)
-  views: true,                       // счётчик просмотров под соцсетями (false — убрать)
+  views: false,                      // счётчик просмотров под соцсетями (false — убрать)
   secret: "ты нашёл пасхалку 👀 привет от toner",  // текст пасхалки (5 быстрых нажатий на аватарку)
 
   // --- Музыка на сайте: внизу кнопка «включить / выключить» и «следующий трек». ---
@@ -34,11 +35,7 @@ window.SITE = {
 
   // --- Соцсети (иконки под именем). Ненужные просто удали ---
   // Доступно: telegram, instagram, tiktok, youtube, vk, discord, twitch, github, spotify, email
-  socials: [
-    { type: "telegram", url: "https://t.me/blazenew" },
-    { type: "youtube",  url: "https://youtube.com/@tonerly" },
-    { type: "tiktok",   url: "https://tiktok.com/@tonerovv" },
-  ],
+  socials: [],
 
   // --- Блоки на странице (идут сверху вниз) ---
   // icon — эмодзи или название иконки: ai, telegram, youtube, tiktok, instagram, vk, discord, twitch, github, spotify, email
@@ -60,15 +57,19 @@ window.SITE = {
       url: "https://t.me/blazenew",
     },
     {
-      type: "grid",
-      items: [
-        { icon: "youtube", title: "YouTube", url: "https://youtube.com/@tonerly" },
-        { icon: "tiktok", title: "TikTok",  url: "https://tiktok.com/@tonerovv" },
-      ],
+      type: "link",
+      icon: "youtube",
+      title: "YouTube",
+      subtitle: "@tonerly",
+      url: "https://youtube.com/@tonerly",
     },
-
-    // Последнее видео с YouTube-канала (обновляется само). shorts: true — показывать и Shorts.
-    { type: "youtube", title: "Последнее видео", channel: "UC9ZWrrcMfFI0idykAh-MuBg" },
+    {
+      type: "link",
+      icon: "tiktok",
+      title: "TikTok",
+      subtitle: "@tonerovv",
+      url: "https://tiktok.com/@tonerovv",
+    },
 
     // 3D-анимация. background: true — большая фигура на заднем плане всего сайта.
     // background: false — маленькая карточка между блоками (её можно крутить пальцем), text — подпись.
@@ -87,6 +88,7 @@ window.SITE = {
 
   // --- Комментарии внизу сайта (ссылки и @ники запрещены) ---
   comments: {
+    show: false,          // false — не показывать старые комментарии на «Переходнике» (база нужна соцсети, не удалять)
     title: "Напиши мне",
     reserved: ["toner"],  // имена с этим словом (toner, tonerov, tonerovv, т0нер...) может писать только владелец
     placeholder: "Оставь комментарий…",

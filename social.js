@@ -54,7 +54,8 @@
   const name = (p, plain) => !p ? `<span class="sn-n">удалён</span>`
     : plain ? `<span class="sn-n">@${esc(p.username)}${badges(p)}</span>` : `<a class="sn-n" href="#u/${esc(p.username)}">@${esc(p.username)}${badges(p)}</a>`;
   const stars = n => `<span class="sn-stars" aria-label="${n} из 5">${[1, 2, 3, 4, 5].map(i => `<span class="${i <= n ? "" : "off"}">${I.fstar}</span>`).join("")}</span>`;
-  const PROF = "id,username,verified,is_admin,banned,avatar";
+  const PROF = "id,num,username,verified,is_admin,banned,avatar";
+  const idTag = p => p && p.num ? `<span class="sn-id">ID ${+p.num}</span>` : "";
   const errText = e => {
     const m = String((e && (e.message || e.error_description)) || e || "");
     if (/too fast/i.test(m)) return "Слишком часто, подожди немного";
@@ -154,20 +155,23 @@
   const offline = () => { soc.innerHTML = `<div class="card sn-box sn-note">Сейчас не получается подключиться. Обнови страницу чуть позже.</div>`; };
 
   // ---------- аватарка: обрезаем в квадрат 320×320 прямо в браузере ----------
-  const makeAvatar = file => new Promise((res, rej) => {
-    if (!file || !/^image\//.test(file.type) || file.size > 15e6) return rej(new Error("bad avatar"));
+  // size = 320 → квадрат 320×320 (аватарка); size = 1280 → фото целиком, длинная сторона до 1280
+  const makeImage = (file, size, square) => new Promise((res, rej) => {
+    if (!file || !/^image\//.test(file.type) || file.size > 25e6) return rej(new Error("bad image"));
     const img = new Image(), fr = new FileReader();   // data: — blob: запрещён политикой CSP
     img.onload = () => {
-      const n = 320, s = Math.min(img.naturalWidth, img.naturalHeight), cv = document.createElement("canvas");
-      cv.width = cv.height = n;
-      cv.getContext("2d").drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, n, n);
+      const w = img.naturalWidth, h = img.naturalHeight, cv = document.createElement("canvas"), x = cv.getContext("2d");
+      if (square) { const s = Math.min(w, h); cv.width = cv.height = size; x.drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, size, size); }
+      else { const k = Math.min(1, size / Math.max(w, h)); cv.width = Math.round(w * k); cv.height = Math.round(h * k); x.drawImage(img, 0, 0, cv.width, cv.height); }
       cv.toBlob(b => b && b.type === "image/webp" ? res({ blob: b, ext: "webp", type: "image/webp" })
-        : cv.toBlob(j => j ? res({ blob: j, ext: "jpg", type: "image/jpeg" }) : rej(new Error("bad avatar")), "image/jpeg", .85), "image/webp", .85);
+        : cv.toBlob(j => j ? res({ blob: j, ext: "jpg", type: "image/jpeg" }) : rej(new Error("bad image")), "image/jpeg", .82), "image/webp", .8);
     };
-    img.onerror = fr.onerror = () => rej(new Error("bad avatar"));
+    img.onerror = fr.onerror = () => rej(new Error("bad image"));
     fr.onload = () => { img.src = fr.result; };
     fr.readAsDataURL(file);
   });
+  const makeAvatar = file => makeImage(file, 320, true);
+  const blobUrl = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
   async function uploadAvatar(file) {
     const { blob, ext, type } = await makeAvatar(file);
     const path = `${ME.id}/${Date.now()}.${ext}`, old = ME.avatar;
@@ -179,7 +183,8 @@
   }
 
   // ---------- мой профиль ----------
-  async function me() {
+  async function me() { await meInner(); addView(); }
+  async function meInner() {
     if (!sb) return offline();
     if (!session) return authForms();
     if (RECOVERY) return newPassword();
@@ -189,7 +194,7 @@
         ${ME.banned ? `<div class="sn-ban">Аккаунт заблокирован: писать нельзя, читать можно.</div>` : ""}
         <div class="sn-prof">
           <label class="sn-avpick" title="Сменить аватарку">${av(ME, "big")}<span class="cam">${I.cam}</span><input type="file" accept="image/*" hidden></label>
-          <div>${name(ME)}<div class="sn-t" id="cnts">с нами с ${new Date(ME.created_at).toLocaleDateString("ru-RU")}</div>
+          <div>${name(ME)} ${idTag(ME)}<div class="sn-t" id="cnts">с нами с ${new Date(ME.created_at).toLocaleDateString("ru-RU")}</div>
             ${ME.avatar ? `<button class="linkb" id="avdel" type="button">убрать фото</button>` : `<div class="sn-t">нажми на круг, чтобы поставить фото</div>`}</div>
         </div>
         <form id="bio" class="sn-bio"><textarea name="b" maxlength="160" rows="2" placeholder="О себе: кто ты и чем занимаешься">${esc(ME.bio || "")}</textarea>
@@ -429,7 +434,7 @@
     const self = ME && ME.id === p.id;
     soc.innerHTML = `<section class="card sn-box sn sn-pcard reveal">
         <div class="sn-pc-top">${av(p, "big")}<div class="sn-stats"><div><b id="c-posts">·</b><span>постов</span></div><div><b id="c-fol">·</b><span>подписчиков</span></div><div><b id="c-sub">·</b><span>подписок</span></div></div></div>
-        <div class="sn-pc-name">${name(p)}</div>
+        <div class="sn-pc-name">${name(p)} ${idTag(p)}</div>
         ${p.bio ? `<div class="sn-pc-bio">${esc(p.bio)}</div>` : ""}
         <div class="sn-pc-act">${self ? `<a class="btn alt" href="#me">Редактировать профиль</a>` : followBtn(p)}</div>
       </section>
@@ -446,18 +451,21 @@
   async function people() {
     if (!sb) return offline();
     soc.innerHTML = `<div class="sn-h"><h2>Люди</h2></div>
-      <label class="card sn-search sn reveal">${I.search}<input type="search" maxlength="20" placeholder="Поиск по нику" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label class="card sn-search sn reveal">${I.search}<input type="search" maxlength="20" placeholder="Ник или ID" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
       <div id="ul" class="sn sn-list"><div class="sn-empty">Загрузка…</div></div>`;
     const inp = soc.querySelector(".sn-search input"), box = soc.querySelector("#ul");
     let seq = 0, t = null;
     const run = async () => {
-      const qv = inp.value.trim().toLowerCase().replace(/^@/, "").replace(/[^a-z0-9_]/g, ""), my = ++seq;
+      const raw = inp.value.trim().toLowerCase(), my = ++seq;
+      const idq = (raw.match(/^(?:id\s*)?#?(\d{1,9})$/) || [])[1];
+      const qv = raw.replace(/^@/, "").replace(/[^a-z0-9_]/g, "");
       let q = sb.from("profiles").select(PROF + ",bio");
-      if (qv) q = q.ilike("username", `%${qv}%`);
+      if (idq) q = q.or(`num.eq.${+idq},username.ilike.*${idq}*`);
+      else if (qv) q = q.ilike("username", `%${qv}%`);
       const { data, error } = await q.order("verified", { ascending: false }).order("created_at", { ascending: false }).limit(40);
       if (my !== seq || !box.isConnected) return;
       if (error) { box.innerHTML = `<div class="sn-empty">Не удалось загрузить</div>`; return; }
-      box.innerHTML = data.length ? data.map(p => `<a class="card sn-urow" href="#u/${esc(p.username)}">${av(p)}<div class="who">${name(p, true)}<span class="sn-t">${esc(p.bio || "")}</span></div>${followBtn(p)}</a>`).join("")
+      box.innerHTML = data.length ? data.map(p => `<a class="card sn-urow" href="#u/${esc(p.username)}">${av(p)}<div class="who"><span>${name(p, true)} ${idTag(p)}</span><span class="sn-t">${esc(p.bio || "")}</span></div>${followBtn(p)}</a>`).join("")
         : `<div class="card sn-empty">Никого не нашли</div>`;
       bindFollow(box);
     };
@@ -466,53 +474,105 @@
   }
 
   // ---------- отзывы ----------
+  const PHOTO_RE = /^[0-9a-f-]{36}\/[0-9]{10,14}\.(webp|jpg)$/;
+  const phUrl = p => PHOTO_RE.test(p || "") ? `${BASE_URL}/storage/v1/object/public/reviews/${p}` : "";
+  function lightbox(src) {
+    const d = document.createElement("div"); d.className = "sn-lb"; d.innerHTML = `<img alt="">`;
+    d.querySelector("img").src = src; d.onclick = () => d.remove(); document.body.append(d);
+  }
   async function reviews() {
     if (!sb) return offline();
-    soc.innerHTML = `<div class="sn-h"><h2>Отзывы</h2></div>
+    soc.innerHTML = `<div class="sn-h"><h2>Отзывы</h2><span id="rq"></span></div>
       <section class="card sn-box sn reveal" id="ravg"><div class="sn-empty">Загрузка…</div></section>
       <section class="card sn-box sn reveal" id="rf"></section>
       <div id="rl" class="sn sn-list"></div>`;
-    const { data, error } = await sb.from("reviews").select(`id,rating,text,reply,pinned,created_at,author,a:profiles!reviews_author_fkey(${PROF})`)
+    const { data, error } = await sb.from("reviews").select(`id,rating,text,reply,pinned,photos,approved,created_at,author,a:profiles!reviews_author_fkey(${PROF})`)
       .order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(100);
     if (!soc.querySelector("#rl")) return;
     if (error) { soc.querySelector("#ravg").innerHTML = `<div class="sn-empty">Не удалось загрузить отзывы</div>`; return; }
-    const avg = data.length ? data.reduce((s, r) => s + r.rating, 0) / data.length : 0;
-    soc.querySelector("#ravg").innerHTML = data.length
-      ? `<div class="sn-avg"><b>${avg.toFixed(1)}</b><div>${stars(Math.round(avg))}<div class="sn-t">${data.length} ${plural(data.length, "отзыв", "отзыва", "отзывов")}</div></div></div>`
+    const ok = data.filter(r => r.approved), wait = data.filter(r => !r.approved);
+    const avg = ok.length ? ok.reduce((s, r) => s + r.rating, 0) / ok.length : 0;
+    soc.querySelector("#ravg").innerHTML = ok.length
+      ? `<div class="sn-avg"><b>${avg.toFixed(1)}</b><div>${stars(Math.round(avg))}<div class="sn-t">${ok.length} ${plural(ok.length, "отзыв", "отзыва", "отзывов")}</div></div></div>`
       : `<div class="sn-note">Отзывов пока нет. Будь первым!</div>`;
+    const adm = ME && ME.is_admin;
+    if (adm && wait.length) soc.querySelector("#rq").textContent = `на проверке: ${wait.length}`;
     const mine = ME && data.find(r => r.author === ME.id);
     const rf = soc.querySelector("#rf");
     if (!ME) rf.innerHTML = needLogin("оставить отзыв");
     else if (ME.banned) rf.remove();
     else {
       let val = mine ? mine.rating : 5;
+      let keep = mine ? (mine.photos || []).filter(p => PHOTO_RE.test(p)) : [];   // уже загруженные
+      let fresh = [];                                                              // новые файлы
       rf.innerHTML = `<h3>${mine ? "Твой отзыв" : "Оставить отзыв"}</h3><form>
         <div class="sn-pick">${[1, 2, 3, 4, 5].map(i => `<button type="button" data-v="${i}" aria-label="${i}">${I.fstar}</button>`).join("")}</div>
         <textarea name="t" maxlength="600" rows="2" placeholder="Что думаешь?" required>${esc(mine ? mine.text : "")}</textarea>
+        <div class="sn-phs"></div>
+        <div class="sn-t">До 3 фото. Отзыв с фото появится после проверки.</div>
         <div class="row"><span class="msg"></span>${mine ? `<button class="btn alt" type="button" id="rdel">Удалить</button>` : ""}<button class="btn" type="submit">${mine ? "Обновить" : "Отправить"}</button></div></form>`;
       const paint = () => rf.querySelectorAll(".sn-pick button").forEach(b => b.classList.toggle("on", +b.dataset.v <= val));
       rf.querySelectorAll(".sn-pick button").forEach(b => b.onclick = () => { val = +b.dataset.v; paint(); }); paint();
+      const phs = rf.querySelector(".sn-phs");
+      const drawPh = () => {
+        phs.innerHTML = keep.map((p, i) => `<div class="sn-ph1"><img alt="" src="${esc(phUrl(p))}"><button type="button" data-k="${i}" aria-label="Убрать">×</button></div>`).join("")
+          + fresh.map((f, i) => `<div class="sn-ph1"><img alt="" src="${esc(f.url)}"><button type="button" data-f="${i}" aria-label="Убрать">×</button></div>`).join("")
+          + (keep.length + fresh.length < 3 ? `<label class="sn-ph1 add">${I.cam}<input type="file" accept="image/*" multiple hidden></label>` : "");
+        phs.querySelectorAll("button[data-k]").forEach(b => b.onclick = () => { keep.splice(+b.dataset.k, 1); drawPh(); });
+        phs.querySelectorAll("button[data-f]").forEach(b => b.onclick = () => { fresh.splice(+b.dataset.f, 1); drawPh(); });
+        const inp = phs.querySelector("input");
+        if (inp) inp.onchange = async () => {
+          const files = [...inp.files].slice(0, 3 - keep.length - fresh.length);
+          for (const file of files) { try { const r = await makeImage(file, 1280); r.url = await blobUrl(r.blob); fresh.push(r); } catch { toast("Не получилось открыть фото"); } }
+          drawPh();
+        };
+      };
+      drawPh();
       const f = rf.querySelector("form");
       f.onsubmit = async e => {
-        e.preventDefault(); const m = f.querySelector(".msg");
-        try { await rpc("sn_save_review", { p_rating: val, p_text: f.t.value }); toast("Спасибо за отзыв!"); reviews(); } catch (er) { say(m, errText(er), "err"); }
+        e.preventDefault(); const m = f.querySelector(".msg"), btn = f.querySelector("button[type=submit]");
+        btn.disabled = true; say(m, fresh.length ? "Загружаю фото…" : "");
+        const up = [];
+        try {
+          for (const [i, r] of fresh.entries()) {
+            const path = `${ME.id}/${Date.now() + i}.${r.ext}`;
+            const { error } = await sb.storage.from("reviews").upload(path, r.blob, { contentType: r.type, upsert: false, cacheControl: "31536000" });
+            if (error) throw error; up.push(path);
+          }
+          const shown = await rpc("sn_save_review", { p_rating: val, p_text: f.t.value, p_photos: [...keep, ...up] });
+          const old = mine ? (mine.photos || []).filter(p => !keep.includes(p)) : [];
+          if (old.length) sb.storage.from("reviews").remove(old).catch(() => {});
+          toast(shown ? "Спасибо за отзыв!" : "Отзыв отправлен на проверку"); reviews();
+        } catch (er) {
+          if (up.length) sb.storage.from("reviews").remove(up).catch(() => {});
+          say(m, /exceed|size|mime/i.test(String(er && er.message)) ? "Фото слишком большое" : errText(er), "err"); btn.disabled = false;
+        }
       };
       const del = rf.querySelector("#rdel");
-      if (del) del.onclick = async () => { try { await rpc("sn_delete_review", { p_id: mine.id }); reviews(); } catch (er) { toast(errText(er)); } };
+      if (del) del.onclick = async () => { try { await rpc("sn_delete_review", { p_id: mine.id }); if ((mine.photos || []).length) sb.storage.from("reviews").remove(mine.photos).catch(() => {}); reviews(); } catch (er) { toast(errText(er)); } };
     }
-    const adm = ME && ME.is_admin;
     const owner = OWNER_P || { username: OWNER, verified: true, is_admin: true };
-    soc.querySelector("#rl").innerHTML = data.map(r => `<article class="card sn-post${r.pinned ? " pin" : ""}" data-id="${r.id}">
-        ${r.pinned ? `<div class="sn-pl">${I.pin}закреплено</div>` : ""}
+    const list = [...(adm ? wait : wait.filter(r => ME && r.author === ME.id)), ...ok];
+    soc.querySelector("#rl").innerHTML = list.map(r => `<article class="card sn-post${r.pinned ? " pin" : ""}${r.approved ? "" : " wait"}" data-id="${r.id}">
+        ${!r.approved ? `<div class="sn-pl">на проверке${adm ? "" : " · видишь только ты"}</div>` : r.pinned ? `<div class="sn-pl">${I.pin}закреплено</div>` : ""}
         <div class="sn-ph">${av(r.a)}<div class="who">${name(r.a)}<span class="sn-t">${ago(r.created_at)}</span></div>${stars(r.rating)}</div>
         <div class="sn-text">${esc(r.text)}</div>
+        ${(r.photos || []).some(p => PHOTO_RE.test(p)) ? `<div class="sn-gal">${r.photos.filter(p => PHOTO_RE.test(p)).map(p => `<button type="button" data-src="${esc(phUrl(p))}"><img alt="" loading="lazy" src="${esc(phUrl(p))}"></button>`).join("")}</div>` : ""}
         ${r.reply ? `<div class="sn-rp">${name(owner)}<div class="sn-text">${esc(r.reply)}</div></div>` : ""}
-        ${adm ? `<div class="sn-acts"><button class="mini-b rp">${r.reply ? "изменить ответ" : "ответить"}</button><button class="mini-b pn">${r.pinned ? "открепить" : "закрепить"}</button><span class="sp"></span><button class="mini-b del">удалить</button></div>` : ""}
+        ${adm && !r.approved ? `<div class="sn-acts"><button class="btn ok">Одобрить</button><button class="btn alt no">Отклонить</button></div>`
+          : adm ? `<div class="sn-acts"><button class="mini-b rp">${r.reply ? "изменить ответ" : "ответить"}</button><button class="mini-b pn">${r.pinned ? "открепить" : "закрепить"}</button><span class="sp"></span><button class="mini-b del">удалить</button></div>` : ""}
       </article>`).join("");
+    soc.querySelectorAll("#rl .sn-gal button").forEach(b => b.onclick = () => lightbox(b.dataset.src));
     if (adm) soc.querySelectorAll("#rl .sn-post").forEach(el => {
       const id = +el.dataset.id, r = data.find(x => x.id === id), q = s => el.querySelector(s);
+      const drop = async () => { await rpc("sn_moderate_review", { p_id: id, p_ok: false }); if ((r.photos || []).length) sb.storage.from("reviews").remove(r.photos).catch(() => {}); };
+      if (!r.approved) {
+        q(".ok").onclick = async () => { try { await rpc("sn_moderate_review", { p_id: id, p_ok: true }); toast("Одобрено"); reviews(); } catch (er) { toast(errText(er)); } };
+        q(".no").onclick = async () => { try { await drop(); toast("Отклонено и удалено"); reviews(); } catch (er) { toast(errText(er)); } };
+        return;
+      }
       q(".pn").onclick = async () => { try { await rpc("sn_pin_review", { p_id: id, p_pin: !r.pinned }); reviews(); } catch (er) { toast(errText(er)); } };
-      q(".del").onclick = async () => { try { await rpc("sn_delete_review", { p_id: id }); reviews(); } catch (er) { toast(errText(er)); } };
+      q(".del").onclick = async () => { try { await drop(); reviews(); } catch (er) { toast(errText(er)); } };
       q(".rp").onclick = () => {
         if (q("form")) return q("form").remove();
         const f = document.createElement("form"); f.style.marginTop = "10px";
@@ -580,25 +640,21 @@
   }
 
   // ---------- переходник: аватарка владельца, подписка, быстрые входы ----------
-  let linksDone = false;
-  function decorateLinks() {
-    if (linksDone || !app) return;
-    const prof = app.querySelector(".profile"); if (!prof) return;
-    linksDone = true;
-    const o = OWNER_P, u = avUrl(o);
-    if (u) { const a = app.querySelector(".profile .avatar"); if (a) { a.innerHTML = ""; const im = new Image(); im.alt = ""; im.src = u; a.append(im); } }
-    const card = document.createElement("div"); card.className = "sn-lk reveal";
-    card.innerHTML = `${o ? `<div class="sn-lk-row"><span class="sn-t" id="lk-fol">·</span>${followBtn(o)}</div>` : ""}
-      <div class="sn-lk-nav">
-        <a href="#feed">${I.feed}<span>Лента</span></a><a href="#chat">${I.chat}<span>Чат</span></a>
-        <a href="#people">${I.people}<span>Люди</span></a><a href="#reviews">${I.star}<span>Отзывы</span></a>
-      </div>`;
-    prof.after(card);
-    if (o) {
-      const setFol = async () => { const n = await countOf("following", o.id); const el = card.querySelector("#lk-fol"); if (el) el.textContent = `${n} ${plural(n, "подписчик", "подписчика", "подписчиков")}`; };
-      setFol(); bindFollow(card, setFol);
-    }
+  // ---------- вид сайта: по центру / на весь экран (запоминается на устройстве) ----------
+  const getWide = () => { try { return localStorage.getItem("sn-wide") === "1"; } catch { return false; } };
+  const setWide = on => { document.body.classList.toggle("wide", on); try { localStorage.setItem("sn-wide", on ? "1" : "0"); } catch {} };
+  document.body.classList.toggle("wide", getWide());
+  function addView() {
+    if (!soc.isConnected || soc.querySelector("#view")) return;
+    const box = document.createElement("section"); box.className = "card sn-box sn reveal"; box.id = "view";
+    box.innerHTML = `<h3>Вид сайта</h3><div class="tabs sn"><button type="button" data-w="0">По центру</button><button type="button" data-w="1">На весь экран</button></div>
+      <div class="sn-t">Запоминается на этом устройстве.</div>`;
+    const paint = () => box.querySelectorAll("button").forEach(b => b.classList.toggle("on", (b.dataset.w === "1") === getWide()));
+    box.querySelectorAll("button").forEach(b => b.onclick = () => { setWide(b.dataset.w === "1"); paint(); });
+    paint(); soc.append(box);
   }
+
+  function decorateLinks() {}   // «Переходник» — только ссылки, без карточек соцсети
 
   // ---------- переходы ----------
   const ROUTES = { "": hub, feed, posts, people, reviews, chat, me };
